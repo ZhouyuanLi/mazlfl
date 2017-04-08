@@ -12,7 +12,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -30,8 +33,8 @@ public class Index {
 	// Term -> term id dictionary
 	private static Map<String, Integer> termDict
 		= new TreeMap<String, Integer>();
-	private static Map<Integer, TreeSet<Integer>> MapOfTermIdDocId
-	  = new TreeMap<Integer, TreeSet<Integer>>();
+	private static Map<Integer, ArrayList<Integer>> MapOfTermIdDocId
+	  = new TreeMap<Integer, ArrayList<Integer>>();
 	// Block queue
 	private static LinkedList<File> blockQueue
 		= new LinkedList<File>();
@@ -130,6 +133,7 @@ public class Index {
 				
 				BufferedReader reader = new BufferedReader(new FileReader(file));
 				String line;
+				Set<Integer> termIdAppeared = new HashSet<Integer>();
 				while ((line = reader.readLine()) != null) {
 					String[] tokens = line.trim().split("\\s+");
 					for (String token : tokens) {
@@ -142,13 +146,19 @@ public class Index {
 					    termId = termDict.get(token);
 					  }
 					  if (!MapOfTermIdDocId.containsKey(termId)) {
-					    MapOfTermIdDocId.put(termId, new TreeSet<Integer>());
+					    MapOfTermIdDocId.put(termId, new ArrayList<Integer>());
 					  }
-					  MapOfTermIdDocId.get(termId).add(docIdCounter - 1);
+					  if (!termIdAppeared.contains(termId)) {
+					    termIdAppeared.add(termId);
+					    MapOfTermIdDocId.get(termId).add(docIdCounter - 1);
+					  }
 						/*
 						 * TODO(zhouyuanl): done.
 						 */
 					}
+				}
+				for (Integer termId : MapOfTermIdDocId.keySet()) {
+				  Collections.sort(MapOfTermIdDocId.get(termId));
 				}
 				reader.close();
 			}
