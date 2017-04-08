@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Index {
 
@@ -29,6 +30,8 @@ public class Index {
 	// Term -> term id dictionary
 	private static Map<String, Integer> termDict
 		= new TreeMap<String, Integer>();
+	private static List<Pair<Integer, Integer>> listOfTermIdDocId
+	  = new ArrayList<Pair<Integer, Integer>>();
 	// Block queue
 	private static LinkedList<File> blockQueue
 		= new LinkedList<File>();
@@ -130,10 +133,18 @@ public class Index {
 				while ((line = reader.readLine()) != null) {
 					String[] tokens = line.trim().split("\\s+");
 					for (String token : tokens) {
+					  int termId = 0;
+					  if (!termDict.containsKey(token)) {
+					    termId = wordIdCounter;
+					    wordIdCounter++;
+					    termDict.put(token, termId);
+					  } else {
+					    termId = termDict.get(token);
+					  }
+					  listOfTermIdDocId.add(
+					      new Pair<Integer, Integer>(termId, docIdCounter - 1));
 						/*
-						 * TODO: Your code here
-						 *       For each term, build up a list of
-						 *       documents in which the term occurs
+						 * TODO(zhouyuanl): done.
 						 */
 					}
 				}
