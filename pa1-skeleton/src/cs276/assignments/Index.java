@@ -30,8 +30,8 @@ public class Index {
 	// Term -> term id dictionary
 	private static Map<String, Integer> termDict
 		= new TreeMap<String, Integer>();
-	private static List<Pair<Integer, Integer>> listOfTermIdDocId
-	  = new ArrayList<Pair<Integer, Integer>>();
+	private static Map<Integer, TreeSet<Integer>> MapOfTermIdDocId
+	  = new TreeMap<Integer, TreeSet<Integer>>();
 	// Block queue
 	private static LinkedList<File> blockQueue
 		= new LinkedList<File>();
@@ -141,8 +141,10 @@ public class Index {
 					  } else {
 					    termId = termDict.get(token);
 					  }
-					  listOfTermIdDocId.add(
-					      new Pair<Integer, Integer>(termId, docIdCounter - 1));
+					  if (!MapOfTermIdDocId.containsKey(termId)) {
+					    MapOfTermIdDocId.put(termId, new TreeSet<Integer>());
+					  }
+					  MapOfTermIdDocId.get(termId).add(docIdCounter - 1);
 						/*
 						 * TODO(zhouyuanl): done.
 						 */
