@@ -167,9 +167,6 @@ public class Index {
 						 */
 					}
 				}
-				for (Integer termId : MapOfTermIdDocId.keySet()) {
-				  Collections.sort(MapOfTermIdDocId.get(termId));
-				}
 				reader.close();
 			}
 
