@@ -49,6 +49,16 @@ public class Index {
 	private static BaseIndex index = null;
 
 	
+	public static PostingList readPosting(FileChannel fc) throws IOException {
+	  PostingList result = null;
+	  try {
+	    result = index.readPosting(fc);
+	  } catch (Throwable e) {
+	    throw new IOException(e);
+	  }
+	  return result;
+	}
+
 	/* 
 	 * Write a posting list to the given file 
 	 * You should record the file position of this posting list
@@ -199,13 +209,69 @@ public class Index {
 			RandomAccessFile bf1 = new RandomAccessFile(b1, "r");
 			RandomAccessFile bf2 = new RandomAccessFile(b2, "r");
 			RandomAccessFile mf = new RandomAccessFile(combfile, "rw");
+
+			PostingList postingList1 = readPosting(bf1.getChannel());
+			PostingList postingList2 = readPosting(bf2.getChannel());
+			while(postingList1 != null && postingList2 != null) {
+			  int termId1 = postingList1.getTermId();
+			  int termId2 = postingList2.getTermId();
+			  if (termId1 < termId2) {
+			    writePosting(mf.getChannel(), postingList1);
+			    postingList1 = readPosting(bf1.getChannel());
+			  } else if (termId1 > termId2) {
+			    writePosting(mf.getChannel(), postingList2);
+			    postingList2 = readPosting(bf2.getChannel());
+			  } else {
+			    PostingList mergedPostingList = new PostingList(termId1);
+			    List<Integer> list1 = postingList1.getList();
+			    int size1 = list1.size();
+			    List<Integer> list2 = postingList2.getList();
+			    int size2 = list2.size();
+			    List<Integer> mergedList = mergedPostingList.getList();
+			    int index1 = 0;
+			    int index2 = 0;
+			    while(index1 < size1 && index2 < size2) {
+			      int docId1 = list1.get(index1);
+			      int docId2 = list2.get(index2);
+			      if (docId1 < docId2) {
+			        mergedList.add(docId1);
+			        index1++;
+			      } else {
+			        mergedList.add(docId2);
+			        index2++;
+			      }
+			    }
+			    
+			    while(index1 < size1) {
+            int docId1 = list1.get(index1);
+            mergedList.add(docId1);
+            index1++;
+          }
+			    
+			    while(index2 < size2) {
+			      int docId2 = list2.get(index2);
+			      mergedList.add(docId2);
+            index2++;
+			    }
+
+			    writePosting(mf.getChannel(), mergedPostingList);
+			    postingList1 = readPosting(bf1.getChannel());
+			    postingList2 = readPosting(bf2.getChannel());
+			  }
+			}
+			while(postingList1 != null) {
+			  writePosting(mf.getChannel(), postingList1);
+        postingList1 = readPosting(bf1.getChannel());
+			}
+			while(postingList2 != null) {
+        writePosting(mf.getChannel(), postingList2);
+        postingList2 = readPosting(bf2.getChannel());
+      }
+			  
+			
 			 
 			/*
-			 * TODO: Your code here
-			 *       Combine blocks bf1 and bf2 into our combined file, mf
-			 *       You will want to consider in what order to merge
-			 *       the two blocks (based on term ID, perhaps?).
-			 *       
+			 * TODO(zhouyuanl): done.
 			 */
 			
 			bf1.close();
@@ -242,5 +308,4 @@ public class Index {
 		}
 		postWriter.close();
 	}
-
 }
